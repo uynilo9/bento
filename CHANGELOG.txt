@@ -1,1 +1,4 @@
+- 0.0.1-dev.1
+
 Init the entire project
+Modify the LICENSE.txt file, add the version marking in the CHANGELOG.txt file

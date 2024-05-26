@@ -10,10 +10,9 @@ import (
 	"github.com/alexflint/go-arg"
 	"github.com/joho/godotenv"
 
+	"github.com/uynilo9/bento/pkg/lexer"
 	"github.com/uynilo9/bento/pkg/logger"
 )
-
-var cmd = strings.Join(os.Args, " ")
 
 type run struct {
 	File string `arg:"positional" help:"the target file supposed to be run" placeholder:"<file>"`
@@ -32,6 +31,8 @@ func (args) Description() string {
 func (args) Epilogue() string {
 	return "✨ Visit " + os.Getenv("WEBSITE") + " to get more infomation about Bento"
 }
+
+var cmd = strings.Join(os.Args, " ")
 
 func main() {
 	if err := godotenv.Load(); err != nil {
@@ -66,7 +67,10 @@ func main() {
 						logger.Fatalf("`%s` isn't a legal Bento source file\n", path)
 					} else {
 						source := string(bytes)
-						fmt.Println(source)
+						tokens := lexer.Tokenize(source)
+						for _, token := range tokens {
+							fmt.Print(token.Debug())
+						}
 						os.Exit(0)
 					}
 				}

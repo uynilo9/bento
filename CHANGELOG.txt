@@ -4,3 +4,4 @@ Init the entire project
 Modify the LICENSE.txt file, add the version marking in the CHANGELOG.txt file
 Modify the bento.go file and add `--license, -l` flags
 Complete most of the tokenizer.go and tokens.go files
+Specify the absolute path to make the env file loaded successfully

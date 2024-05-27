@@ -35,7 +35,8 @@ func (args) Epilogue() string {
 var cmd = strings.Join(os.Args, " ")
 
 func main() {
-	if err := godotenv.Load(); err != nil {
+	env := filepath.Join(filepath.Dir(os.Args[0]), "../.env")
+	if err := godotenv.Load(env); err != nil {
 		logger.Fatalf("Failed to find or load the file `.env` while running the command `%s`\n", cmd)
 	}
 	var args args

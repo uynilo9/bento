@@ -15,6 +15,7 @@ type (
 
 const (
 	EOF TokenKind = iota
+	NL
 
 	NUMBER
 	STRING
@@ -62,6 +63,7 @@ const (
 
 var tokenMap = map[TokenKind]string{
 	EOF: "eof",
+	NL: "nl",
 
 	NUMBER: "number",
 	STRING: "sring",
@@ -117,7 +119,7 @@ func (token Token) string() string {
  
 func (token Token) Debug() string {
 	var result string
-	if token.isOneOf(NUMBER, STRING, IDENTIFIER) {
+	if token.isOneOf(NL, NUMBER, STRING, IDENTIFIER) {
 		result = fmt.Sprintf("{%s: \"%s\"}\n", token.string(), token.Value)
 	} else {
 		result = fmt.Sprintf("{%s: \"\"}\n", token.string())
@@ -126,5 +128,5 @@ func (token Token) Debug() string {
 }
 
 func NewToken(kind TokenKind, value string) Token {
-	return Token{Kind: kind, Value: value}
+	return Token{kind, value}
 }

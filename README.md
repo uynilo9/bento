@@ -24,6 +24,6 @@ make build
 ./bin/bento
 ```
 
-## ⚖ License
+## 📜 License
 
 Apache License 2.0

@@ -2,50 +2,76 @@ package lexer
 
 import (
 	"regexp"
+	"strconv"
 
 	"github.com/uynilo9/bento/pkg/logger"
 )
 
 type (
-	regexHandler func (
-		tokenizer *tokenizer,
-		regex *regexp.Regexp,
-	)
+	position struct {
+		index uint
+		line uint
+		column uint
+	}
+	
+	regexHandler func (tokenizer *tokenizer, regex *regexp.Regexp)
 	regexPattern struct {
 		regex *regexp.Regexp
 		handler regexHandler
 	}
 
 	tokenizer struct {
-		Tokens []Token
-		patterns []regexPattern
-		position uint
 		source string
+		position position
+		patterns []regexPattern
+		Tokens []Token
 	}
 )
 
-func (tokenizer * tokenizer) at() string {
-	return string(tokenizer.source[tokenizer.position])
+func (tokenizer *tokenizer) at() string {
+	return string(tokenizer.source[tokenizer.position.index])
 }
 
 func (tokenizer *tokenizer) atEOF() bool {
-	return tokenizer.position >= uint(len(tokenizer.source))
+	return tokenizer.position.index >= uint(len(tokenizer.source))
+}
+
+func (tokenizer *tokenizer) atLine() string {
+	return strconv.Itoa(int(tokenizer.position.line))
+}
+
+func (tokenizer *tokenizer) atColumn() string {
+	return strconv.Itoa(int(tokenizer.position.column))
+}
+
+func (tokenizer * tokenizer) getWhere() (string, string) {
+	return tokenizer.atLine(), tokenizer.atColumn()
 }
 
 func (tokenizer *tokenizer) remainder() string {
-	return tokenizer.source[tokenizer.position:]
+	return tokenizer.source[tokenizer.position.index:]
 }
 
 func (tokenizer *tokenizer) push(token Token) {
 	tokenizer.Tokens = append(tokenizer.Tokens, token)
 }
 
-func (tokenizer *tokenizer) advance(length uint) {
-	tokenizer.position += length
+func (tokenizer *tokenizer) advanceIndex(length uint) {
+	tokenizer.position.index += length
 }
 
+func (tokenizer *tokenizer) advanceLine(length uint) {
+	tokenizer.position.line += length
+	tokenizer.position.column = 1
+	tokenizer.advanceIndex(length)
+}
 
-func Tokenize(source string) []Token {
+func (tokenizer *tokenizer) advanceColumn(length uint) {
+	tokenizer.position.column += length
+	tokenizer.advanceIndex(length)
+}
+
+func Tokenize(source string, file string) []Token {
 	tokenizer := newTokenizer(source)
 	
 	for !tokenizer.atEOF() {
@@ -59,7 +85,9 @@ func Tokenize(source string) []Token {
 			}
 		}
 		if !matched {
-			logger.Fatalf("Unrecognized token `%s` while tokenizing in the Lexer\n", tokenizer.at())
+			char := tokenizer.at()
+			line, column := tokenizer.getWhere()
+			logger.Fatalf("Got a legit token `%s` while tokenizing line %s column %s of the file `%s`\n", char, line, column, file)
 		}
 	}
 	tokenizer.push(NewToken(EOF, ""))
@@ -68,21 +96,33 @@ func Tokenize(source string) []Token {
 
 func defaultHandler(kind TokenKind, value string) regexHandler {
 	return func(tokenizer *tokenizer, regex *regexp.Regexp) {
-		tokenizer.advance(uint(len(value)))
+		tokenizer.advanceColumn(uint(len(value)))
 		tokenizer.push(NewToken(kind, value))
 	}
+}
+
+func newlineHandler(tokenizer *tokenizer, regex *regexp.Regexp) {
+	matched := regex.FindString(tokenizer.remainder())
+	tokenizer.push(NewToken(NL, strconv.Itoa(len(matched))))
+	tokenizer.advanceLine(uint(len(matched)))
 }
 
 func numberHandler(tokenizer *tokenizer, regex *regexp.Regexp) {
 	matched := regex.FindString(tokenizer.remainder())
 	tokenizer.push(NewToken(NUMBER, matched))
-	tokenizer.advance(uint(len(matched)))
+	tokenizer.advanceColumn(uint(len(matched)))
 }
 
 func newTokenizer(source string) *tokenizer {
 	return &tokenizer{
-		Tokens: make([]Token, 0),
+		source: source,
+		position: position{
+			index: 0,
+			line: 1,
+			column: 1,
+		},
 		patterns: []regexPattern{
+			{regexp.MustCompile(`\n+`), newlineHandler},
 			{regexp.MustCompile(`[0-9]+(\.[0-9]+)?`), numberHandler},
 
 			{regexp.MustCompile(`\(`), defaultHandler(LROUND, "(")}, {regexp.MustCompile(`\)`), defaultHandler(RROUND, ")")},
@@ -111,6 +151,6 @@ func newTokenizer(source string) *tokenizer {
 			{regexp.MustCompile(`\.`), defaultHandler(DOT, ".")},
 			{regexp.MustCompile(`\?`), defaultHandler(QUESTION, "?")}, {regexp.MustCompile(`:`), defaultHandler(COLON, ":")},
 		},
-		source: source,
+		Tokens: make([]Token, 0),
 	}
 }

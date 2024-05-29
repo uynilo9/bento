@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/TwiN/go-color" // IGNORE: colour rather than color :<
+	"github.com/TwiN/go-color"
 )
 
 func Detail(a ...any) error {

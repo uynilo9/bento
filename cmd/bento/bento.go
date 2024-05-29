@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/alexflint/go-arg"
 	"github.com/joho/godotenv"
@@ -32,15 +31,13 @@ func (args) Epilogue() string {
 	return "✨ Visit " + os.Getenv("WEBSITE") + " to get more infomation about Bento"
 }
 
-var cmd = strings.Join(os.Args, " ")
-
 func main() {
 	env := filepath.Join(filepath.Dir(os.Args[0]), "../.env")
-	if err := godotenv.Load(env); err != nil {
-		logger.Fatalf("Failed to find or load the file `.env` while running the command `%s`\n", cmd)
+	if godotenv.Load(env) != nil && godotenv.Load() != nil {
+		logger.Fatalf("Failed to find or load the dotenv file `%s`\n", env)
 	}
 	var args args
-	goarg, err := arg.NewParser(arg.Config{Program: os.Args[0], Exit: os.Exit}, &args)
+	goarg, err := arg.NewParser(arg.Config{Program: "bento", Exit: os.Exit}, &args)
 	if err != nil {
 		logger.Fatal("Failed to create the argument parser\n")
 	}
@@ -65,10 +62,10 @@ func main() {
 							logger.Fatalf("Failed to read the input file `%s`\n", path)
 						}
 					} else if filepath.Ext(file) != ".bento" {
-						logger.Fatalf("`%s` isn't a legal Bento source file\n", path)
+						logger.Fatalf("`%s` isn't a legit Bento source file\n", path)
 					} else {
 						source := string(bytes)
-						tokens := lexer.Tokenize(source)
+						tokens := lexer.Tokenize(source, path)
 						for _, token := range tokens {
 							fmt.Print(token.Debug())
 						}

@@ -9,8 +9,8 @@ import (
 	"github.com/alexflint/go-arg"
 	"github.com/joho/godotenv"
 
-	"github.com/uynilo9/bento/pkg/lexer"
 	"github.com/uynilo9/bento/pkg/logger"
+	"github.com/uynilo9/bento/pkg/tokenizer"
 )
 
 type run struct {
@@ -65,7 +65,7 @@ func main() {
 						logger.Fatalf("`%s` isn't a legit Bento source file\n", path)
 					} else {
 						source := string(bytes)
-						tokens := lexer.Tokenize(source, path)
+						tokens := tokenizer.Tokenize(source, path)
 						for _, token := range tokens {
 							fmt.Print(token.Debug())
 						}

@@ -6,3 +6,4 @@ Modify the bento.go file and add `--license, -l` flags
 Complete most of the tokenizer.go and tokens.go files
 Specify the absolute path to make the env file loaded successfully
 Modify some files, add line and column in the tokenizer.go file
+Complete the tokenizer and make the dir `lexer` become `tokenizer`, add a new example file and the ast folder

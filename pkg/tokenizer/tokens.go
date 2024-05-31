@@ -1,4 +1,4 @@
-package lexer
+package tokenizer
 
 import (
 	"fmt"
@@ -16,10 +16,11 @@ type (
 const (
 	EOF TokenKind = iota
 	NL
+	SPACE; INDENTATION
 
+	IDENTIFIER
 	NUMBER
 	STRING
-	IDENTIFIER
 
 	LROUND; RROUND		// ( )
 	LSQUARE; RSQUARE	// [ ]
@@ -47,15 +48,15 @@ const (
 	DOTDOT; DOTDOTDOT	// .. ...
 	QUESTION; COLON		// ? :
 
-	IMP; EXP
-	VAR; CONST
+	IMP; FROM
+	VAR; CONST; PROC
 	TYPE; ENUM
 	STRUCT; INTERF
 	CLASS; MODULE
 	NEW
 	IN; OF
 	IF; ELIF; ELSE
-	SWICH; CASE
+	SWITCH; CASE; DEFAULT
 	FOR; WHILE
 	BREAK; CONTIN
 	RET
@@ -64,10 +65,11 @@ const (
 var tokenMap = map[TokenKind]string{
 	EOF: "eof",
 	NL: "nl",
+	SPACE: "space", INDENTATION: "indentation",
 
+	IDENTIFIER: "identifier",
 	NUMBER: "number",
 	STRING: "sring",
-	IDENTIFIER: "identifier",
 
 	LROUND: "lround", RROUND: "rround",
 	LSQUARE: "lsquare", RSQUARE: "rsquare",
@@ -95,18 +97,33 @@ var tokenMap = map[TokenKind]string{
 	DOTDOT: "dotdot", DOTDOTDOT: "dotdotdot",
 	QUESTION: "question", COLON: "colon",
 
-	IMP: "imp", EXP: "exp",
-	VAR: "var", CONST: "const",
+	IMP: "imp", FROM: "from",
+	VAR: "var", CONST: "const", PROC: "proc",
 	TYPE: "type", ENUM: "enum",
 	STRUCT: "struct", INTERF: "interf",
 	CLASS: "class", MODULE: "module",
 	NEW: "new",
 	IN: "in", OF: "of",
 	IF: "if", ELIF: "elif", ELSE: "else",
-	SWICH: "swich", CASE: "case",
+	SWITCH: "switch", CASE: "case", DEFAULT: "default",
 	FOR: "for", WHILE: "while",
 	BREAK: "break", CONTIN: "contin",
 	RET: "ret",
+}
+
+var keywordMap = map[string]TokenKind{
+	"imp": IMP, "from": FROM,
+	"var": VAR, "const": CONST, "proc": PROC,
+	"type": TYPE, "enum": ENUM,
+	"struct": STRUCT, "interf": INTERF,
+	"class": CLASS, "module": MODULE,
+	"new": NEW,
+	"in": IN, "of": OF,
+	"if": IF, "elif": ELIF, "else": ELSE,
+	"switch": SWITCH, "case": CASE, "default": DEFAULT,
+	"for": FOR, "while": WHILE,
+	"break": BREAK, "contin": CONTIN,
+	"ret": RET,
 }
 
 func (token Token) isOneOf(kinds ...TokenKind) bool {
@@ -119,10 +136,12 @@ func (token Token) string() string {
  
 func (token Token) Debug() string {
 	var result string
-	if token.isOneOf(NL, NUMBER, STRING, IDENTIFIER) {
-		result = fmt.Sprintf("{%s: \"%s\"}\n", token.string(), token.Value)
+	if token.isOneOf(NL, SPACE, INDENTATION) {
+		result = fmt.Sprintf("%s (%s)\n", token.string(), token.Value)
+	} else if token.isOneOf(IDENTIFIER, NUMBER, STRING) {
+		result = fmt.Sprintf("%s (\"%s\")\n", token.string(), token.Value)
 	} else {
-		result = fmt.Sprintf("{%s: \"\"}\n", token.string())
+		result = fmt.Sprintf("%s\n", token.string())
 	}
 	return result
 }
